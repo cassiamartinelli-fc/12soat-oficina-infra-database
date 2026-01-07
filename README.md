@@ -2,13 +2,9 @@
 
 Infraestrutura do banco de dados PostgreSQL gerenciado com Neon (serverless).
 
----
-
 ## 🎯 Propósito
 
 Provisionar e gerenciar o banco de dados PostgreSQL serverless para armazenar dados da aplicação com alta disponibilidade.
-
----
 
 ## 🛠️ Tecnologias
 
@@ -16,8 +12,6 @@ Provisionar e gerenciar o banco de dados PostgreSQL serverless para armazenar da
 - **Terraform** - Infraestrutura como código
 - **TypeORM** - Migrations gerenciadas pela aplicação NestJS
 - **GitHub Actions** - CI/CD automático
-
----
 
 ## 📁 Estrutura do Banco
 
@@ -33,8 +27,6 @@ Tabelas:
 ├── item_ordem_servico   - Serviços de uma OS (quantidade, valor)
 └── peca_ordem_servico   - Peças de uma OS (quantidade, valor)
 ```
-
----
 
 ## 🚀 Setup
 
@@ -53,14 +45,14 @@ Tabelas:
    ```
    postgresql://user:password@ep-xxx.us-east-2.aws.neon.tech/oficina_mecanica?sslmode=require
    ```
-   > **Importante**: Guarde essa string, você vai precisar dela nos próximos passos!
+   > ⚠️ **Importante**: Guarde essa string, você vai precisar dela nos próximos passos!
 
 ### **2. Configurar Secrets**
 
 Adicione o secret no GitHub nos repositórios que **usam o banco de dados**:
 
 - **12soat-oficina-app** (aplicação principal)
-- **12soat-oficina-lambda-auth** (autenticação consulta clientes)
+- **12soat-oficina-lambda-auth** (autenticação)
 
 Em cada repositório, vá em **Settings → Secrets → Actions** e adicione:
 
@@ -70,9 +62,7 @@ Em cada repositório, vá em **Settings → Secrets → Actions** e adicione:
 
 ### **3. Criação das Tabelas**
 
-As tabelas são criadas **automaticamente** quando a aplicação NestJS inicia pela primeira vez.
-
----
+As tabelas são criadas **automaticamente** quando a aplicação 12soat-oficina-app inicia pela primeira vez.
 
 ## 📊 Diagrama ER
 
@@ -99,19 +89,15 @@ As tabelas são criadas **automaticamente** quando a aplicação NestJS inicia p
          └──────────────┘      └──────────────┘
 ```
 
----
-
 ## 🔗 Recursos
 
 - **Neon Console**: https://console.neon.tech
 - **Docs Neon**: https://neon.tech/docs/introduction
-- **GitHub Actions**: https://github.com/<usuario>/12soat-oficina-infra-database/actions
-
----
+- **GitHub Actions**: https://github.com/cassiamartinelli-fc/12soat-oficina-infra-database/actions
 
 ## 🧪 Teste (Opcional)
 
-Verificação **opcional** do banco de dados isoladamente, sem precisar rodar a aplicação.
+Verificação opcional do banco de dados isoladamente, sem precisar rodar a aplicação.
 
 ### **Opção 1: Via Neon Console**
 
@@ -146,8 +132,6 @@ SELECT * FROM clientes;  # Ver dados
 ```
 
 > **Nota**: As tabelas só existirão após a aplicação NestJS rodar pela primeira vez e criar o schema automaticamente.
-
----
 
 ## 📄 Licença
 
