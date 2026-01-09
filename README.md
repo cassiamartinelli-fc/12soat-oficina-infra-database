@@ -72,6 +72,34 @@ terraform output -raw connection_uri
 
 📖 [Documentação Terraform](terraform/README.md)
 
+---
+
+## ⚙️ Workflows (GitHub Actions)
+
+Workflows disponíveis para gerenciar infraestrutura:
+
+### Provision Database
+Provisiona banco e exibe connection string para configurar secrets.
+
+```
+Actions → Provision Database → Run workflow
+Escolher: plan | apply | output
+```
+
+### Terraform
+Valida/aplica infraestrutura (usado em PRs e deploys).
+
+```
+Actions → Terraform → Run workflow
+Escolher: plan | apply | destroy
+```
+
+📖 [Documentação completa dos workflows](.github/workflows/README.md)
+
+**Secret necessário:** `NEON_API_KEY` (Settings → Secrets → Actions)
+
+---
+
 ## 📄 Arquitetura
 
 ```

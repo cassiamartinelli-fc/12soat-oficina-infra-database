@@ -1,109 +1,52 @@
-# Terraform - Neon PostgreSQL Database
+# Terraform - Neon PostgreSQL
 
-Este diretório contém a infraestrutura como código (IaC) para provisionar o banco de dados PostgreSQL no Neon.
+Infraestrutura como código para provisionar banco PostgreSQL serverless no Neon.
 
-## 📋 Pré-requisitos
-
-1. **Terraform** instalado (>= 1.0)
-   ```bash
-   brew install terraform  # macOS
-   ```
-
-2. **Neon API Key**
-   - Acesse: https://console.neon.tech/app/settings/api-keys
-   - Clique em "Generate new API key"
-   - Copie a chave gerada
-
-## 🚀 Como usar
+## 🚀 Uso Local
 
 ### 1. Configurar credenciais
 
-Copie o arquivo de exemplo e preencha suas credenciais:
-
 ```bash
 cp terraform.tfvars.example terraform.tfvars
+# Editar terraform.tfvars: adicionar NEON_API_KEY
 ```
 
-Edite `terraform.tfvars` e adicione sua Neon API Key:
+**Obter API Key:** https://console.neon.tech/app/settings/api-keys
 
-```hcl
-neon_api_key = "sua-chave-aqui"
-```
+⚠️ `terraform.tfvars` está no `.gitignore` - **nunca commitá-lo!**
 
-⚠️ **IMPORTANTE**: O arquivo `terraform.tfvars` está no `.gitignore` e **NÃO deve ser commitado**!
-
-### 2. Inicializar Terraform
+### 2. Executar
 
 ```bash
 terraform init
+terraform plan              # Ver mudanças
+terraform apply             # Aplicar mudanças
+terraform output -raw connection_uri  # Ver connection string
 ```
 
-### 3. Planejar mudanças
+### 3. Destruir (se necessário)
 
 ```bash
-terraform plan
+terraform destroy  # ⚠️ Deleta o banco!
 ```
 
-### 4. Aplicar infraestrutura
+## 📦 Recursos Criados
 
-```bash
-terraform apply
-```
+- **Neon Project**: Projeto PostgreSQL serverless
+- **Database**: `neondb` (criado automaticamente pelo Neon)
+- **Role**: `neondb_owner` (criado automaticamente)
 
-Digite `yes` quando solicitado.
-
-### 5. Obter connection string
-
-Após o apply, você pode obter a connection string:
-
-```bash
-terraform output -raw connection_uri
-```
-
-Copie esse valor e use como `NEON_DATABASE_URL` nos outros repositórios.
-
-## 🗑️ Destruir infraestrutura
-
-Para remover todos os recursos criados:
-
-```bash
-terraform destroy
-```
-
-⚠️ **ATENÇÃO**: Isso irá deletar o banco de dados e todos os dados! Use com cuidado.
-
-## 📊 Recursos criados
-
-- **Neon Project**: Projeto no Neon
-- **Neon Database**: Banco de dados PostgreSQL
-- **Neon Role**: Usuário com permissões no banco
-
-## 🔒 Segurança
-
-- ✅ API Key armazenada em `terraform.tfvars` (não commitado)
-- ✅ Connection string marcada como `sensitive` no Terraform
-- ✅ Para CI/CD, use GitHub Secrets: `NEON_API_KEY`
-
-## 📝 Outputs disponíveis
+## 🔧 Outputs
 
 | Output | Descrição |
 |--------|-----------|
-| `project_id` | ID do projeto no Neon |
-| `database_host` | Host do banco de dados |
-| `database_name` | Nome do banco de dados |
-| `connection_uri` | URI completa de conexão (sensível) |
-| `database_user` | Usuário do banco (sensível) |
+| `project_id` | ID do projeto Neon |
+| `database_host` | Host do banco |
+| `database_name` | Nome do database |
+| `connection_uri` | Connection string completa (sensitive) |
 
-## 🔄 Integração com CI/CD
+## 🔄 CI/CD
 
-Para usar no GitHub Actions, adicione o secret `NEON_API_KEY` e use:
+Para usar via GitHub Actions, configure secret `NEON_API_KEY` e execute workflow **Terraform** ou **Provision Database**.
 
-```yaml
-- name: Terraform Apply
-  env:
-    TF_VAR_neon_api_key: ${{ secrets.NEON_API_KEY }}
-  run: |
-    cd terraform
-    terraform init
-    terraform apply -auto-approve
-```
+Veja [../.github/workflows/README.md](../.github/workflows/README.md)
