@@ -27,3 +27,9 @@ variable "region" {
   type        = string
   default     = "aws-us-east-2"
 }
+
+variable "neon_org_id" {
+  description = "Neon organization id"
+  type        = string
+  default     = "" # opcional: vazio para backward compatibility (ou remova default e passe via TF_VAR_)
+}
