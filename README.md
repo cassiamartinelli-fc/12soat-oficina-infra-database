@@ -1,6 +1,6 @@
 # Oficina Mecânica - Banco de Dados Gerenciado
 
-Infraestrutura do banco de dados PostgreSQL gerenciado com Neon (serverless).
+Infraestrutura do banco de dados PostgreSQL serverless (Neon) para a aplicação Oficina Mecânica.
 
 ## 🎯 Propósito
 
@@ -11,7 +11,7 @@ Provisionar e gerenciar o banco de dados PostgreSQL serverless para armazenar da
 - **Neon PostgreSQL** - Banco serverless gerenciado
 - **Terraform** - Infraestrutura como código
 - **TypeORM** - Migrations gerenciadas pela aplicação NestJS
-- **GitHub Actions** - CI/CD automático
+- **GitHub Actions** - CI/CD para provisionamento
 
 ## 📁 Estrutura do Banco
 
@@ -30,53 +30,61 @@ Tabelas:
 
 ## 🚀 Setup
 
-> **Pré-requisito**: Criar conta gratuita no Neon → https://console.neon.tech
+### **Opção A: Usar banco em produção (Recomendado para avaliação)**
 
-### **1. Provisionar Banco PostgreSQL**
-
-Escolha **uma** das opções (ambas criam projeto PostgreSQL serverless com sua própria conta Neon):
-
-#### **Opção A: Terraform (Automatizado)**
+O banco já está criado e configurado. Secrets `NEON_DATABASE_URL` já estão nos repositórios `oficina-app` e `lambda-auth`.
 
 ```bash
-# 1. Obter sua API Key: https://console.neon.tech/app/settings/api-keys
-# 2. Configurar localmente
+# 1. Clonar repositórios
+git clone https://github.com/cassiamartinelli-fc/12soat-oficina-app
+git clone https://github.com/cassiamartinelli-fc/12soat-oficina-lambda-auth
+git clone https://github.com/cassiamartinelli-fc/12soat-oficina-infra-k8s
+
+# 2. Deploy da aplicação (ver README de cada repo)
+cd 12soat-oficina-app
+kubectl apply -f k8s/
+
+# 3. Aplicação conecta automaticamente ao banco Neon em produção
+```
+
+### **Opção B: Criar próprio banco Neon**
+
+Para replicar o ambiente em sua própria conta Neon:
+
+```bash
+# 1. Criar conta gratuita: https://console.neon.tech
+# 2. Obter API Key: https://console.neon.tech/app/settings/api-keys
+
+# 3. Provisionar via Terraform
 cd terraform
 cp terraform.tfvars.example terraform.tfvars
-# Editar terraform.tfvars: adicionar sua NEON_API_KEY
+# Editar terraform.tfvars: adicionar NEON_API_KEY
 
-# 3. Criar infraestrutura
 terraform init
-terraform apply  # Cria projeto "oficina-mecanica" na SUA conta
+terraform apply
 
-# 4. Obter Connection String
+# 4. Obter connection string
 terraform output -raw connection_uri
+
+# 5. Configurar secrets nos repos oficina-app e lambda-auth
+# Settings → Secrets → Actions → Add: NEON_DATABASE_URL
 ```
 
 📖 [Documentação Terraform](terraform/README.md)
 
-#### **Opção B: Console Web (Manual)**
+## 📄 Arquitetura
 
-1. https://console.neon.tech → **Create a project**
-2. **Name**: `oficina-mecanica` | **Region**: US East
-3. **Connect** → Copiar **Connection String**
+```
+┌─────────────────────────────────────┐
+│   Neon PostgreSQL (Serverless)      │
+│   Region: us-east-1                 │
+│   Database: neondb                  │
+└──────────┬──────────────────────────┘
+           │
+           ├─── oficina-app (NestJS + TypeORM)
+           └─── lambda-auth (validação CPF)
+```
 
----
-
-### **2. Configurar Connection String**
-
-Usar a connection string obtida no passo 1.
-
-Adicionar em **Settings** → **Secrets** → **Actions** dos repositórios:
-
-| Repositório | Secret | Valor |
-|-------------|--------|-------|
-| `12soat-oficina-app` | `NEON_DATABASE_URL` | Connection string obtida no passo 1 |
-| `12soat-oficina-lambda-auth` | `NEON_DATABASE_URL` | Mesma connection string |
-
-### **3. Criar Tabelas**
-
-Tabelas são criadas automaticamente no primeiro deploy de `12soat-oficina-app` (TypeORM migrations).
 
 ## 📊 Diagrama ER
 
@@ -89,54 +97,37 @@ Tabelas são criadas automaticamente no primeiro deploy de `12soat-oficina-app` 
 ┌─────────────┐       ┌──────────────────┐
 │  veiculos   │──────▶│ ordens_servico   │
 └─────────────┘  1:N  └────────┬─────────┘
-                              │ 1:N
-                    ┌─────────┴─────────┐
-                    │                   │
-                    ▼                   ▼
-         ┌──────────────────┐  ┌──────────────────┐
-         │ item_ordem_srv   │  │ peca_ordem_srv   │
-         └────────┬─────────┘  └────────┬─────────┘
-                  │ N:1                 │ N:1
-                  ▼                     ▼
-         ┌──────────────┐      ┌──────────────┐
-         │  servicos    │      │    pecas     │
-         └──────────────┘      └──────────────┘
+                               │ 1:N
+                     ┌─────────┴─────────┐
+                     │                   │
+                     ▼                   ▼
+            ┌──────────────────┐  ┌──────────────────┐
+            │ item_ordem_srv   │  │ peca_ordem_srv   │
+            └────────┬─────────┘  └────────┬─────────┘
+                     │ N:1                 │ N:1
+                     ▼                     ▼
+            ┌──────────────┐      ┌──────────────┐
+            │  servicos    │      │    pecas     │
+            └──────────────┘      └──────────────┘
 ```
 
 ## 🔗 Recursos
 
-- **Neon Console**: https://console.neon.tech
-- **Docs Neon**: https://neon.tech/docs/introduction
+- **Banco em produção**: https://console.neon.tech (projeto `oficina-mecanica`)
 - **GitHub Actions**: https://github.com/cassiamartinelli-fc/12soat-oficina-infra-database/actions
+- **Repositórios relacionados**:
+  - [12soat-oficina-app](https://github.com/cassiamartinelli-fc/12soat-oficina-app)
+  - [12soat-oficina-lambda-auth](https://github.com/cassiamartinelli-fc/12soat-oficina-lambda-auth)
+  - [12soat-oficina-infra-k8s](https://github.com/cassiamartinelli-fc/12soat-oficina-infra-k8s)
 
-## 🧪 Teste (Opcional)
-
-Verificação opcional do banco de dados isoladamente, sem precisar rodar a aplicação.
-
-### **Opção 1: Via Neon Console**
-
-1. Acesse: https://console.neon.tech
-2. Selecione o projeto: `oficina-mecanica`
-3. Vá em **SQL Editor** (menu lateral)
-4. Execute queries SQL:
-   ```sql
-   -- Ver tabelas criadas (após aplicação rodar pela primeira vez)
-   SELECT table_name FROM information_schema.tables
-   WHERE table_schema = 'public';
-
-   -- Ver dados de clientes
-   SELECT * FROM clientes LIMIT 10;
-   ```
-5. Vá em **Monitoring** para ver uso de storage
-
-### **Opção 2: Via psql (linha de comando)**
+## 🧪 Validação
 
 ```bash
 # Instalar psql (se não tiver) - macOS
 brew install postgresql
 
 # Conectar ao banco
-psql $NEON_DATABASE_URL
+psql "postgresql://neondb_owner:npg_rSLf9wQDRcb8@ep-summer-mountain-ad4oe55j-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require"
 
 # Comandos úteis:
 \dt              # Listar tabelas
@@ -145,7 +136,7 @@ SELECT * FROM clientes;  # Ver dados
 \q               # Sair
 ```
 
-> **Nota**: As tabelas só existirão após a aplicação NestJS rodar pela primeira vez e criar o schema automaticamente.
+---
 
 ## 📄 Licença
 
