@@ -6,6 +6,7 @@
 resource "neon_project" "oficina_mecanica" {
   name      = var.project_name
   region_id = var.region
+  org_id    = var.neon_org_id
 
   # Configurações do branch principal
   branch {
