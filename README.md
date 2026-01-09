@@ -30,39 +30,53 @@ Tabelas:
 
 ## 🚀 Setup
 
-### **1. Criar Banco no Neon**
+> **Pré-requisito**: Criar conta gratuita no Neon → https://console.neon.tech
 
-1. Acesse: https://console.neon.tech
-2. Faça login ou crie uma conta (gratuita)
-3. Clique em **"Create a project"**
-4. Configure:
-   - **Project name**: `oficina-mecanica`
-   - **Database name**: `oficina_mecanica`
-   - **Region**: US East (Ohio) ou sua preferência
-5. Clique em **"Create project"**
-6. Na tela do projeto, clique em **"Connect"** (no topo)
-7. Copie a **Connection String** (formato: `postgres://...`):
-   ```
-   postgresql://user:password@ep-xxx.us-east-2.aws.neon.tech/oficina_mecanica?sslmode=require
-   ```
-   > ⚠️ **Importante**: Guarde essa string, você vai precisar dela nos próximos passos!
+### **1. Provisionar Banco PostgreSQL**
 
-### **2. Configurar Secrets**
+Escolha **uma** das opções (ambas criam projeto PostgreSQL serverless com sua própria conta Neon):
 
-Adicione o secret no GitHub nos repositórios que **usam o banco de dados**:
+#### **Opção A: Terraform (Automatizado)**
 
-- **12soat-oficina-app** (aplicação principal)
-- **12soat-oficina-lambda-auth** (autenticação)
+```bash
+# 1. Obter sua API Key: https://console.neon.tech/app/settings/api-keys
+# 2. Configurar localmente
+cd terraform
+cp terraform.tfvars.example terraform.tfvars
+# Editar terraform.tfvars: adicionar sua NEON_API_KEY
 
-Em cada repositório, vá em **Settings → Secrets → Actions** e adicione:
+# 3. Criar infraestrutura
+terraform init
+terraform apply  # Cria projeto "oficina-mecanica" na SUA conta
 
-| Secret | Valor |
-|--------|-------|
-| `NEON_DATABASE_URL` | Connection string copiada do Neon |
+# 4. Obter Connection String
+terraform output -raw connection_uri
+```
 
-### **3. Criação das Tabelas**
+📖 [Documentação Terraform](terraform/README.md)
 
-As tabelas são criadas **automaticamente** quando a aplicação 12soat-oficina-app inicia pela primeira vez.
+#### **Opção B: Console Web (Manual)**
+
+1. https://console.neon.tech → **Create a project**
+2. **Name**: `oficina-mecanica` | **Region**: US East
+3. **Connect** → Copiar **Connection String**
+
+---
+
+### **2. Configurar Connection String**
+
+Usar a connection string obtida no passo 1.
+
+Adicionar em **Settings** → **Secrets** → **Actions** dos repositórios:
+
+| Repositório | Secret | Valor |
+|-------------|--------|-------|
+| `12soat-oficina-app` | `NEON_DATABASE_URL` | Connection string obtida no passo 1 |
+| `12soat-oficina-lambda-auth` | `NEON_DATABASE_URL` | Mesma connection string |
+
+### **3. Criar Tabelas**
+
+Tabelas são criadas automaticamente no primeiro deploy de `12soat-oficina-app` (TypeORM migrations).
 
 ## 📊 Diagrama ER
 
