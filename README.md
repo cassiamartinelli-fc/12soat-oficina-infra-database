@@ -78,14 +78,17 @@ terraform output -raw connection_uri
 
 Workflows disponíveis para gerenciar infraestrutura:
 
-
 ### Provision Database
+Provisiona banco e exibe connection string para configurar secrets.
+
 ```
 Actions → Provision Database → Run workflow
 Escolher: plan | apply | output
 ```
 
 ### Terraform
+Valida/aplica infraestrutura (usado em PRs e deploys).
+
 ```
 Actions → Terraform → Run workflow
 Escolher: plan | apply | destroy
