@@ -55,14 +55,15 @@ terraform destroy  # ⚠️ DELETA o banco e TODOS OS DADOS permanentemente!
 
 ## 🔄 CI/CD via GitHub Actions
 
-⚠️ **ATENÇÃO:** O workflow **Terraform** executa contra o banco de **produção existente**!
+O workflow **Terraform** serve para **replicar o ambiente** em uma nova conta Neon.
 
-- ✅ **plan** — Seguro. Apenas visualiza mudanças sem aplicar
-- ⚠️ **apply** — **MODIFICA** o banco de produção (use com cuidado!)
-- ✅ **output** — Seguro. Apenas exibe connection string
-- ⚠️ **destroy** — **DELETA PERMANENTEMENTE** o banco de produção (NÃO USE!)
+**Para replicar:**
+1. Configure secrets `NEON_API_KEY` e `NEON_ORG_ID` da **sua conta Neon**
+2. Execute workflow **Terraform** → **plan** (validar)
+3. Execute workflow **Terraform** → **apply** (criar banco)
+4. Acesse Neon Console para obter connection string: https://console.neon.tech
 
-**Para replicar ambiente em nova conta:**
-1. Configure secrets `NEON_API_KEY` e `NEON_ORG_ID` da sua conta
-2. Execute workflow **Terraform** → **apply**
-3. Copie connection string do output
+**Opções disponíveis:**
+- ✅ **plan** — Valida configuração sem criar recursos
+- ⚠️ **apply** — Cria novo banco de dados
+- ⚠️ **destroy** — DELETA permanentemente o banco criado
