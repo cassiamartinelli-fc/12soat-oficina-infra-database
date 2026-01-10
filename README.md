@@ -1,17 +1,17 @@
-# Oficina Mecânica - Banco de Dados Gerenciado
+# Oficina Mecânica — Infraestrutura do Banco de Dados
 
-Infraestrutura do banco de dados PostgreSQL serverless (Neon) para a aplicação Oficina Mecânica.
+Provisionamento automatizado do banco de dados PostgreSQL serverless (Neon) via Terraform e GitHub Actions.
 
 ## 🎯 Propósito
 
-Provisionar e gerenciar o banco de dados PostgreSQL serverless para armazenar dados da aplicação com alta disponibilidade.
+Provisionar e gerenciar banco de dados PostgreSQL serverless com Terraform, integrando CI/CD para deploy automatizado da infraestrutura de dados.
 
 ## 🛠️ Tecnologias
 
-- **Neon PostgreSQL** - Banco serverless gerenciado
-- **Terraform** - Infraestrutura como código
-- **TypeORM** - Migrations gerenciadas pela aplicação NestJS
-- **GitHub Actions** - CI/CD para provisionamento
+- **Neon PostgreSQL** — Banco serverless gerenciado (free tier)
+- **Terraform** — Infraestrutura como código
+- **GitHub Actions** — CI/CD para provisionamento
+- **TypeORM** — Migrations gerenciadas pela aplicação NestJS
 
 ## 📁 Estrutura do Banco
 
@@ -30,89 +30,51 @@ Tabelas:
 
 ## 🚀 Setup
 
-### **Opção A: Usar banco em produção (Recomendado para avaliação)**
+O banco de dados **já está criado e rodando em produção**. Secrets `NEON_DATABASE_URL` já estão configurados nos repositórios `oficina-app` e `lambda-auth`.
 
-O banco já está criado e configurado. Secrets `NEON_DATABASE_URL` já estão nos repositórios `oficina-app` e `lambda-auth`.
-
+**Para usar o banco existente:**
 ```bash
 # 1. Clonar repositórios
 git clone https://github.com/cassiamartinelli-fc/12soat-oficina-app
 git clone https://github.com/cassiamartinelli-fc/12soat-oficina-lambda-auth
 git clone https://github.com/cassiamartinelli-fc/12soat-oficina-infra-k8s
 
-# 2. Deploy da aplicação (ver README de cada repo)
-cd 12soat-oficina-app
-kubectl apply -f k8s/
-
-# 3. Aplicação conecta automaticamente ao banco Neon em produção
+# 2. Seguir instruções de deploy de cada repositório
+# A aplicação conecta automaticamente ao banco Neon em produção
 ```
 
-### **Opção B: Criar próprio banco Neon**
+## ⚙️ Workflow (GitHub Actions)
 
-Para replicar o ambiente em sua própria conta Neon:
-
-```bash
-# 1. Criar conta gratuita: https://console.neon.tech
-# 2. Obter API Key: https://console.neon.tech/app/settings/api-keys
-
-# 3. Provisionar via Terraform
-cd terraform
-cp terraform.tfvars.example terraform.tfvars
-# Editar terraform.tfvars: adicionar NEON_API_KEY
-
-terraform init
-terraform apply
-
-# 4. Obter connection string
-terraform output -raw connection_uri
-
-# 5. Configurar secrets nos repos oficina-app e lambda-auth
-# Settings → Secrets → Actions → Add: NEON_DATABASE_URL
-```
-
-📖 [Documentação Terraform](terraform/README.md)
-
----
-
-## ⚙️ Workflows (GitHub Actions)
-
-Workflows disponíveis para gerenciar infraestrutura:
-
-### Provision Database
-Provisiona banco e exibe connection string para configurar secrets.
-
-```
-Actions → Provision Database → Run workflow
-Escolher: plan | apply | output
-```
+⚠️ **IMPORTANTE:** Este workflow executa contra o banco de **produção existente**. Use com cuidado!
 
 ### Terraform
-Valida/aplica infraestrutura (usado em PRs e deploys).
 
 ```
 Actions → Terraform → Run workflow
-Escolher: plan | apply | destroy
+Escolher: plan | apply | output | destroy
 ```
 
-📖 [Documentação completa dos workflows](.github/workflows/README.md)
+- ✅ **plan** — Seguro. Visualiza mudanças sem aplicá-las
+- ⚠️ **apply** — **MODIFICA** o banco de produção
+- ✅ **output** — Seguro. Exibe connection string
+- ⚠️ **destroy** — **DELETA PERMANENTEMENTE** o banco e todos os dados
 
-**Secret necessário:** `NEON_API_KEY` (Settings → Secrets → Actions)
+Para replicar ambiente em sua própria conta Neon:
 
----
+📖 Ver [Documentação Terraform](terraform/README.md)
 
 ## 📄 Arquitetura
 
 ```
 ┌─────────────────────────────────────┐
 │   Neon PostgreSQL (Serverless)      │
-│   Region: us-east-1                 │
+│   Region: aws-us-east-1             │
 │   Database: neondb                  │
 └──────────┬──────────────────────────┘
            │
            ├─── oficina-app (NestJS + TypeORM)
            └─── lambda-auth (validação CPF)
 ```
-
 
 ## 📊 Diagrama ER
 
@@ -148,24 +110,30 @@ Escolher: plan | apply | destroy
   - [12soat-oficina-lambda-auth](https://github.com/cassiamartinelli-fc/12soat-oficina-lambda-auth)
   - [12soat-oficina-infra-k8s](https://github.com/cassiamartinelli-fc/12soat-oficina-infra-k8s)
 
+## 🔐 CI/CD — Secrets e permissões
+
+**Secrets necessários (Settings → Secrets → Actions):**
+- `NEON_API_KEY` — API Key do Neon para provisionar recursos: https://console.neon.tech/app/settings/api-keys
+- `NEON_ORG_ID` — Organization ID do Neon: https://console.neon.tech/app/settings/profile
+
+
 ## 🧪 Validação
 
 ```bash
-# Instalar psql (se não tiver) - macOS
-brew install postgresql
+# 1. Obter connection string após terraform apply
+cd terraform
+terraform output -raw connection_uri
 
-# Conectar ao banco
-psql "postgresql://neondb_owner:npg_rSLf9wQDRcb8@ep-summer-mountain-ad4oe55j-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require"
+# 2. Conectar ao banco (substituir pela connection string real)
+psql "<connection_string_obtida_no_passo_1>"
 
-# Comandos úteis:
-\dt              # Listar tabelas
-\d clientes      # Ver estrutura da tabela clientes
+# 3. Comandos úteis:
+\dt                      # Listar tabelas
+\d clientes              # Ver estrutura da tabela
 SELECT * FROM clientes;  # Ver dados
-\q               # Sair
+\q                       # Sair
 ```
-
----
 
 ## 📄 Licença
 
-MIT - Tech Challenge 12SOAT Fase 3
+MIT — Tech Challenge 12SOAT Fase 3

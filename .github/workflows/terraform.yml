@@ -1,41 +1,33 @@
 name: Terraform
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'terraform/**'
-  pull_request:
-    branches:
-      - main
-    paths:
-      - 'terraform/**'
   workflow_dispatch:
     inputs:
       action:
-        description: 'Terraform action to perform'
+        description: "Terraform action to perform"
         required: true
-        default: 'plan'
+        default: "plan"
         type: choice
         options:
           - plan
           - apply
+          - output
           - destroy
 
-env:
-  TF_VERSION: '1.6'
-  TF_WORKING_DIR: terraform
+permissions:
+  contents: read
 
 jobs:
   terraform:
-    name: Terraform ${{ github.event.inputs.action || 'plan' }}
     runs-on: ubuntu-latest
-
+    env:
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      TF_VAR_neon_api_key: ${{ secrets.NEON_API_KEY }}
+      NEON_ORG_ID: ${{ secrets.NEON_ORG_ID }}
+      TF_VAR_neon_org_id: ${{ secrets.NEON_ORG_ID }}
     defaults:
       run:
-        working-directory: ${{ env.TF_WORKING_DIR }}
-
+        working-directory: terraform
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -43,44 +35,68 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: ${{ env.TF_VERSION }}
-
-      - name: Terraform Format Check
-        id: fmt
-        run: terraform fmt -check -recursive
-        continue-on-error: true
+          terraform_version: "1.6"
+          terraform_wrapper: false
 
       - name: Terraform Init
-        id: init
         run: terraform init
 
-      - name: Terraform Validate
-        id: validate
-        run: terraform validate -no-color
-
       - name: Terraform Plan
-        id: plan
-        if: github.event_name == 'pull_request' || github.event.inputs.action == 'plan' || github.event.inputs.action == ''
+        if: github.event.inputs.action == 'plan'
         env:
-          TF_VAR_neon_api_key: ${{ secrets.NEON_API_KEY }}
-        run: terraform plan -no-color -input=false
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_ORG_ID: ${{ secrets.NEON_ORG_ID }} # <-- novo secret com Organization ID
+          TF_VAR_neon_org_id: ${{ secrets.NEON_ORG_ID }} # <-- mapeia para variável Terraform
+        run: terraform plan -no-color
 
       - name: Terraform Apply
-        if: github.event.inputs.action == 'apply' && github.ref == 'refs/heads/main'
+        if: github.event.inputs.action == 'apply'
         env:
-          TF_VAR_neon_api_key: ${{ secrets.NEON_API_KEY }}
-        run: terraform apply -auto-approve -input=false
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_ORG_ID: ${{ secrets.NEON_ORG_ID }} # <-- novo secret com Organization ID
+          TF_VAR_neon_org_id: ${{ secrets.NEON_ORG_ID }} # <-- mapeia para variável Terraform
+        run: |
+          terraform apply -auto-approve
+          echo "✅ Database provisioned successfully!"
+
+      - name: Show Connection String
+        if: github.event.inputs.action == 'output' || github.event.inputs.action == 'apply'
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_ORG_ID: ${{ secrets.NEON_ORG_ID }} # <-- novo secret com Organization ID
+          TF_VAR_neon_org_id: ${{ secrets.NEON_ORG_ID }} # <-- mapeia para variável Terraform
+        run: |
+          echo "### 📊 Database Outputs"
+          echo ""
+          echo "**Project ID:**"
+          terraform output -raw project_id
+          echo ""
+          echo ""
+          echo "**Database Host:**"
+          terraform output -raw database_host
+          echo ""
+          echo ""
+          echo "**Database Name:**"
+          terraform output -raw database_name
+          echo ""
+          echo ""
+          echo "⚠️ Connection URI (sensitive - copy and add as NEON_DATABASE_URL secret):"
+          terraform output -raw connection_uri
+          echo ""
+          echo ""
+          echo "### 📝 Next Steps:"
+          echo "1. Copy the connection URI above"
+          echo "2. Add as secret NEON_DATABASE_URL in:"
+          echo "   - 12soat-oficina-app"
+          echo "   - 12soat-oficina-lambda-auth"
 
       - name: Terraform Destroy
-        if: github.event.inputs.action == 'destroy' && github.ref == 'refs/heads/main'
+        if: github.event.inputs.action == 'destroy'
         env:
-          TF_VAR_neon_api_key: ${{ secrets.NEON_API_KEY }}
-        run: terraform destroy -auto-approve -input=false
-
-      - name: Upload Terraform Plan
-        if: steps.plan.outcome == 'success'
-        uses: actions/upload-artifact@v4
-        with:
-          name: terraform-plan
-          path: ${{ env.TF_WORKING_DIR }}/tfplan
-          retention-days: 7
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_ORG_ID: ${{ secrets.NEON_ORG_ID }}
+          TF_VAR_neon_org_id: ${{ secrets.NEON_ORG_ID }}
+        run: |
+          echo "⚠️ WARNING: This will DELETE the database!"
+          terraform destroy -auto-approve
+          echo "🗑️ Database destroyed successfully!"

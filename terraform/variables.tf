@@ -23,13 +23,12 @@ variable "database_owner" {
 }
 
 variable "region" {
-  description = "Região do Neon (aws-us-east-2, aws-us-west-2, etc)"
+  description = "Região do Neon (aws-us-east-1, aws-us-east-2, etc)"
   type        = string
-  default     = "aws-us-east-2"
+  default     = "aws-us-east-1"
 }
 
 variable "neon_org_id" {
-  description = "Neon organization id"
+  description = "Neon organization ID (obrigatório)"
   type        = string
-  default     = "" # opcional: vazio para backward compatibility (ou remova default e passe via TF_VAR_)
 }
