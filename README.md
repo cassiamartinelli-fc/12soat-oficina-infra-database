@@ -45,23 +45,22 @@ git clone https://github.com/cassiamartinelli-fc/12soat-oficina-infra-k8s
 
 ## ⚙️ Workflow (GitHub Actions)
 
-⚠️ **IMPORTANTE:** Este workflow executa contra o banco de **produção existente**. Use com cuidado!
+⚠️ **IMPORTANTE:** Este workflow serve para **replicar o ambiente** em nova conta Neon.
 
 ### Terraform
 
 ```
 Actions → Terraform → Run workflow
-Escolher: plan | apply | output | destroy
+Escolher: plan | apply | destroy
 ```
 
-- ✅ **plan** — Seguro. Visualiza mudanças sem aplicá-las
-- ⚠️ **apply** — **MODIFICA** o banco de produção
-- ✅ **output** — Seguro. Exibe connection string
-- ⚠️ **destroy** — **DELETA PERMANENTEMENTE** o banco e todos os dados
+- ✅ **plan** — Valida a configuração Terraform
+- ⚠️ **apply** — Cria novo banco de dados (requer suas próprias secrets)
+- ⚠️ **destroy** — **DELETA PERMANENTEMENTE** o banco criado
 
-Para replicar ambiente em sua própria conta Neon:
+**Observação:** O workflow **não tem acesso** ao banco de produção existente (por segurança). Para replicar o ambiente, configure suas próprias secrets `NEON_API_KEY` e `NEON_ORG_ID`.
 
-📖 Ver [Documentação Terraform](terraform/README.md)
+📖 Ver detalhes em [terraform/README.md](terraform/README.md)
 
 ## 📄 Arquitetura
 

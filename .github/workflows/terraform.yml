@@ -11,7 +11,6 @@ on:
         options:
           - plan
           - apply
-          - output
           - destroy
 
 permissions:
@@ -53,42 +52,19 @@ jobs:
         if: github.event.inputs.action == 'apply'
         env:
           NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
-          NEON_ORG_ID: ${{ secrets.NEON_ORG_ID }} # <-- novo secret com Organization ID
-          TF_VAR_neon_org_id: ${{ secrets.NEON_ORG_ID }} # <-- mapeia para variável Terraform
+          NEON_ORG_ID: ${{ secrets.NEON_ORG_ID }}
+          TF_VAR_neon_org_id: ${{ secrets.NEON_ORG_ID }}
         run: |
           terraform apply -auto-approve
+          echo ""
           echo "✅ Database provisioned successfully!"
-
-      - name: Show Connection String
-        if: github.event.inputs.action == 'output' || github.event.inputs.action == 'apply'
-        env:
-          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
-          NEON_ORG_ID: ${{ secrets.NEON_ORG_ID }} # <-- novo secret com Organization ID
-          TF_VAR_neon_org_id: ${{ secrets.NEON_ORG_ID }} # <-- mapeia para variável Terraform
-        run: |
-          echo "### 📊 Database Outputs"
           echo ""
-          echo "**Project ID:**"
-          terraform output -raw project_id
+          echo "### 📊 Connection String"
           echo ""
+          echo "Run the following command to get the connection URI:"
+          echo "terraform output -raw connection_uri"
           echo ""
-          echo "**Database Host:**"
-          terraform output -raw database_host
-          echo ""
-          echo ""
-          echo "**Database Name:**"
-          terraform output -raw database_name
-          echo ""
-          echo ""
-          echo "⚠️ Connection URI (sensitive - copy and add as NEON_DATABASE_URL secret):"
-          terraform output -raw connection_uri
-          echo ""
-          echo ""
-          echo "### 📝 Next Steps:"
-          echo "1. Copy the connection URI above"
-          echo "2. Add as secret NEON_DATABASE_URL in:"
-          echo "   - 12soat-oficina-app"
-          echo "   - 12soat-oficina-lambda-auth"
+          echo "Or check the Neon Console: https://console.neon.tech"
 
       - name: Terraform Destroy
         if: github.event.inputs.action == 'destroy'
