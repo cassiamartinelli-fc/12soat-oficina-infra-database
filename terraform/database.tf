@@ -20,9 +20,6 @@ resource "neon_project" "oficina_mecanica" {
     suspend_timeout_seconds  = 0
   }
 
-  # Ajuste: não pedir retenção de histórico maior que o máximo permitido (21600s = 6h)
-  requested_history_retention_seconds = 21600
-
   # Ignora mudanças em atributos gerenciados pelo Neon
   lifecycle {
     ignore_changes = [
