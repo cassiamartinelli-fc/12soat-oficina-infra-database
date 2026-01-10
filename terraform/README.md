@@ -2,32 +2,40 @@
 
 Infraestrutura como código para provisionar banco PostgreSQL serverless no Neon.
 
-## 🚀 Uso Local
+⚠️ **IMPORTANTE:** O banco de produção **já está criado e rodando**. Este Terraform serve apenas para:
+- Documentar a infraestrutura existente
+- Permitir replicar o ambiente em outra conta Neon (para testes/desenvolvimento)
 
-### 1. Configurar credenciais
+## 🚀 Replicar ambiente (criar novo banco)
+
+### 1. Criar conta Neon e obter credenciais
+
+- Criar conta gratuita: https://console.neon.tech
+- Obter API Key: https://console.neon.tech/app/settings/api-keys
+- Obter Org ID: https://console.neon.tech/app/settings/profile
+
+### 2. Configurar variáveis
 
 ```bash
 cp terraform.tfvars.example terraform.tfvars
-# Editar terraform.tfvars: adicionar NEON_API_KEY
+# Editar terraform.tfvars: adicionar NEON_API_KEY e NEON_ORG_ID
 ```
-
-**Obter API Key:** https://console.neon.tech/app/settings/api-keys
 
 ⚠️ `terraform.tfvars` está no `.gitignore` - **nunca commitá-lo!**
 
-### 2. Executar
+### 3. Provisionar
 
 ```bash
 terraform init
-terraform plan              # Ver mudanças
-terraform apply             # Aplicar mudanças
-terraform output -raw connection_uri  # Ver connection string
+terraform plan              # ✅ Sempre execute plan primeiro!
+terraform apply             # ⚠️ Cria novo banco (cobra recursos)
+terraform output -raw connection_uri  # Copiar connection string
 ```
 
-### 3. Destruir (se necessário)
+### 4. Destruir (quando não precisar mais)
 
 ```bash
-terraform destroy  # ⚠️ Deleta o banco!
+terraform destroy  # ⚠️ DELETA o banco e TODOS OS DADOS permanentemente!
 ```
 
 ## 📦 Recursos Criados
@@ -45,8 +53,16 @@ terraform destroy  # ⚠️ Deleta o banco!
 | `database_name` | Nome do database |
 | `connection_uri` | Connection string completa (sensitive) |
 
-## 🔄 CI/CD
+## 🔄 CI/CD via GitHub Actions
 
-Para usar via GitHub Actions, configure secret `NEON_API_KEY` e execute workflow **Terraform** ou **Provision Database**.
+⚠️ **ATENÇÃO:** O workflow **Terraform** executa contra o banco de **produção existente**!
 
-Veja [../.github/workflows/README.md](../.github/workflows/README.md)
+- ✅ **plan** — Seguro. Apenas visualiza mudanças sem aplicar
+- ⚠️ **apply** — **MODIFICA** o banco de produção (use com cuidado!)
+- ✅ **output** — Seguro. Apenas exibe connection string
+- ⚠️ **destroy** — **DELETA PERMANENTEMENTE** o banco de produção (NÃO USE!)
+
+**Para replicar ambiente em nova conta:**
+1. Configure secrets `NEON_API_KEY` e `NEON_ORG_ID` da sua conta
+2. Execute workflow **Terraform** → **apply**
+3. Copie connection string do output
